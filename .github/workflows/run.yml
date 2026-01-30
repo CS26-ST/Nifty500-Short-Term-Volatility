@@ -1,0 +1,36 @@
+name: Generate Nifty500 Close Prices
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every 5 days at 02:30 UTC (~08:00 India)
+    - cron: "30 2 */5 * *"
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install yfinance requests pandas openpyxl
+
+      - name: Run script
+        run: |
+          python generate_close_prices.py
+
+      - name: Commit output
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add nifty500_close_prices_1y.xlsx
+          git commit -m "Update Nifty500 close prices" || echo "No changes"
+          git push
