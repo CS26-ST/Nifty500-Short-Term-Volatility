@@ -4,26 +4,15 @@ import pandas as pd
 import yfinance as yf
 
 def fetch_nifty500_symbols():
-    url = "https://www.nseindia.com/api/equity-stockIndices?index=NIFTY%20500"
-    headers = {
-        "User-Agent": "Mozilla/5.0",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Accept": "application/json,text/plain,*/*",
-        "Connection": "keep-alive",
-    }
+    df = pd.read_csv("nifty500_symbols.csv")
+    symbols = (
+        df["Symbol"]
+        .astype(str)
+        .str.strip()
+        .tolist()
+    )
+    return sorted(list(set(s + ".NS" for s in symbols if s)))
 
-    session = requests.Session()
-    session.get("https://www.nseindia.com", headers=headers, timeout=30)
-    data = session.get(url, headers=headers, timeout=30).json()
-
-    symbols = []
-    for item in data.get("data", []):
-        sym = str(item.get("symbol", "")).strip()
-        if sym and not sym.upper().startswith("NIFTY"):
-            symbols.append(sym + ".NS")
-
-    return sorted(list(set(symbols)))
 
 def download_close_prices(symbols, period="1y", chunk_size=50, pause=1):
     all_close = []
