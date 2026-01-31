@@ -3,9 +3,9 @@ name: Generate Nifty500 Close Prices
 on:
   workflow_dispatch:
   schedule:
-    # Every 5 days at 02:30 UTC (~08:00 India)
-    - cron: "30 2 */5 * *"
-
+    # Every Friday at 6PM IST
+    - cron: "30 12 * * 5"
+    
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -31,6 +31,6 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add nifty500_close_prices_1y.xlsx
+          git add data/nifty500/*.xlsx
           git commit -m "Update Nifty500 close prices" || echo "No changes"
           git push
