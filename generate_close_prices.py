@@ -1,7 +1,8 @@
 import time
-import requests
 import pandas as pd
 import yfinance as yf
+import os
+from datetime import date
 
 def fetch_nifty500_symbols():
     df = pd.read_csv("nifty500_symbols.csv")
@@ -11,6 +12,7 @@ def fetch_nifty500_symbols():
         .str.strip()
         .tolist()
     )
+    # Convert to Yahoo tickers
     return sorted(list(set(s + ".NS" for s in symbols if s)))
 
 
@@ -41,6 +43,7 @@ def download_close_prices(symbols, period="1y", chunk_size=50, pause=1):
 
     return close_prices
 
+
 def main():
     symbols = fetch_nifty500_symbols()
     close_prices = download_close_prices(symbols)
@@ -48,11 +51,21 @@ def main():
     if close_prices.empty:
         raise RuntimeError("No price data downloaded")
 
-    close_prices.to_excel("nifty500_close_prices_1y.xlsx")
+    # Folder: data/nifty500
+    base_dir = "data/nifty500"
+    os.makedirs(base_dir, exist_ok=True)
 
-    print("Saved: nifty500_close_prices_1y.xlsx")
+    # Date-stamped filename
+    today = date.today().isoformat()
+    filename = f"{base_dir}/nifty500_close_prices_1y_{today}.xlsx"
+
+    # Save Excel
+    close_prices.to_excel(filename)
+
+    print("Saved:", filename)
     print("Rows (trading days):", close_prices.shape[0])
     print("Stocks:", close_prices.shape[1])
+
 
 if __name__ == "__main__":
     main()
