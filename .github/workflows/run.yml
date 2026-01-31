@@ -1,11 +1,11 @@
-name: Generate Nifty500 Close Prices
+name: Generate Nifty500 Close Prices + Volatility Breadth Chart
 
 on:
   workflow_dispatch:
   schedule:
-    # Every Friday at 6PM IST
+    # Every Friday at 6:00 PM IST (12:30 UTC)
     - cron: "30 12 * * 5"
-    
+
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -21,16 +21,27 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install yfinance requests pandas openpyxl
+          pip install yfinance pandas openpyxl matplotlib
 
-      - name: Run script
+      # Script #1: download close prices and save Excel in data/nifty500/
+      - name: Run close-price generator
         run: |
           python generate_close_prices.py
 
-      - name: Commit output
+      # Script #2: compute volatility breadth series + chart from latest Excel
+      - name: Run volatility breadth + chart
+        run: |
+          python compute_volatility_breadth.py
+
+      # Keep repo size controlled (optional, recommended)
+      - name: Cleanup old Nifty500 files (keep last 20)
+        run: |
+          ls -1t data/nifty500/nifty500_close_prices_1y_*.xlsx | tail -n +21 | xargs -r rm -f
+
+      - name: Commit outputs
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
-          git add data/nifty500/*.xlsx
-          git commit -m "Update Nifty500 close prices" || echo "No changes"
+          git add data/nifty500/*.xlsx output/*.csv images/*.png
+          git commit -m "Update Nifty500 data + volatility breadth chart" || echo "No changes"
           git push
